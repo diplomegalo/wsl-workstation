@@ -1,0 +1,18 @@
+---
+- hosts: local
+  gather_facts: yes
+  become: yes
+
+  task:
+    - name: Ensure systemd=true in /etc/wsl.conf
+      blockfile:
+        path: /etc/wsl.conf
+        create: yes
+        block: |
+          [boot]
+          systemd=true
+        register=: wslconf
+
+    - name: If wsl.conf has changed, ask user to restart WSL
+      debug:
+        msg: "Redémarre WSL: wsl --shutdown (dans PowerShell) puis relance Ubuntu"
