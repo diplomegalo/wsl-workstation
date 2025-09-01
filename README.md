@@ -21,3 +21,14 @@ ansible --version
 ssh-keygen -t ed25519 -C "ton@email"
 cat ~/.ssh/id_ed25519.pub
 ```
+
+## Step 4 - Clone repository
+
+```bash
+git clone git@github.com:diplomegalo/wsl-workstation.git ~/wsl-workstation
+cd ~/wsl-workstation
+```
+## Step - Run playbooks
+
+### Basics 
+

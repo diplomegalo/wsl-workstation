@@ -18,7 +18,7 @@
           - git
           - openssh-client
           - curl
-          - ca-certification
+          - ca-certificates
           - unzip
           - nano
           - tmux
