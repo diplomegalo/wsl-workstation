@@ -1,4 +1,4 @@
-# Build your WSL environment
+# Build your WSL workstation
 Setup a wsl environnement with a collection of ansible playbook for each type of projects
 
 ## Step 1 - Install WSL + Ubuntu
