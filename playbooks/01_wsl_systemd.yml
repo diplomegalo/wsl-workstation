@@ -3,7 +3,7 @@
   gather_facts: yes
   become: yes
 
-  task:
+  tasks:
     - name: Ensure systemd=true in /etc/wsl.conf
       blockfile:
         path: /etc/wsl.conf
