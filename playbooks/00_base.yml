@@ -1,0 +1,30 @@
+---
+- hosts: local
+  gather_facts: yes
+  become: yes
+
+  vars:
+    user_home: "{{ ansible_env.HOME }}"
+  
+  tasks:
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+    
+    - name: Install bare minimum for devcontainer & editing
+      apt:
+        state: present
+        pkg:
+          - git
+          - openssh-client
+          - curl
+          - ca-certification
+          - unzip
+          - nano
+          - tmux
+      
+    - name: Create a workspace folder
+      file:
+        path: "{{user_home}}/source"
+        state: directory
+        mode: '0755'
