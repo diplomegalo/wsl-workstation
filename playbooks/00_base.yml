@@ -10,6 +10,12 @@
     - name: Update APT cache
       apt:
         update_cache: yes
+
+    - name: Ensure default tmux (no custom config)
+      become: false
+      file:
+        path: "{{ ansible_env.HOME }}/.tmux.conf"
+        state: absent
     
     - name: Install bare minimum for devcontainer & editing
       apt:
