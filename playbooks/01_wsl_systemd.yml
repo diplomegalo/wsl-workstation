@@ -4,15 +4,13 @@
   become: yes
 
   tasks:
-    - name: Ensure systemd=true in /etc/wsl.conf
-      blockfile:
+    - name: Enable systemd in WSL
+      blockinfile:
         path: /etc/wsl.conf
         create: yes
         block: |
           [boot]
           systemd=true
-        register=: wslconf
-
-    - name: If wsl.conf has changed, ask user to restart WSL
+    - name: Message to restart WSL
       debug:
-        msg: "Redémarre WSL: wsl --shutdown (dans PowerShell) puis relance Ubuntu"
+        msg: "Redémarre WSL: wsl --shutdown (dans PowerShell) puis relance Ubuntu."
