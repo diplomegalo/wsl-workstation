@@ -1,0 +1,86 @@
+- hosts: localhost
+  connection: local
+  gather_facts: yes
+  become: yes
+
+  vars:
+    target_user: "{{ ansible_user_id }}"
+    target_home: "{{ lookup('env','HOME') }}"
+    setuptool_path: /usr/bin/dockerd-rootless-setuptool.sh
+    user_systemd_unit: "{{ target_home }}/.config/systemd/user/docker.service"
+
+  pre_tasks:
+    
+    - name: Install prerequired tools
+      apt:
+        update_cache: yes
+        pkg:
+          - uidmap
+          - dbus-user-session
+          - docker-ce-rootless-extras
+        state: present
+
+    - name: Restart AppArmor
+      service:
+        name: apparmor
+        state: restarted
+      
+    - name: Disable docker service
+      systemd:
+        name: docker.service
+        enabled: no
+        state: stopped
+
+    - name: Disable docker socket
+      systemd:
+        name: docker.socket
+        enabled: no
+        state: stopped
+
+    - name: Remove current docker socket
+      file:
+        path: /var/run/docker.sock
+        state: absent
+
+    - name: Check if dockerd-rootless-setuptool.sh exist
+      stat:
+        path: "{{ setuptool_path }}"
+      register: setuptool
+
+    - name: Install docker-ce-rootless-extras if setuptool is missing
+      apt:
+        name: docker-ce-rootless-extras
+        state: present
+        update_cache: yes
+        when: not setuptool.stat.exists
+
+  tasks:
+
+    - name: Run dockerd-rootless-setuptool
+      become_user: "{{ target_user }}"
+      command:
+        cmd: "{{ setuptool_path }} install"
+      args:
+        creates: "{{ user_systemd_unit}}"
+
+    - name: Enable lingering for {{ target_user }}
+      become: true
+      ansible.builtin.file:
+        path: "/var/lib/systemd/linger/{{ target_user }}"
+        state: touch
+        mode: "0644"
+
+    - name: Enable docker service and start for rootless
+      become_user: "{{ target_user}}"
+      systemd:
+        scope: user
+        name: docker
+        enabled: yes
+        state: started
+      when: ansible_service_mgr == "systemd"
+
+    - name: Enable docker service in rootfull mode
+      systemd:
+        name: docker
+        enabled: yes
+        state: started

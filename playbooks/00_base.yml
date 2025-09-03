@@ -1,8 +1,10 @@
 ---
 - hosts: local
+  connection: local
   gather_facts: yes
+
   vars:
-    user_home: "{{ ansible_env.HOME }}"
+    user_home: "{{ lookup('env', 'HOME') }}" 
       
   tasks:
     - name: Update APT cache
@@ -10,12 +12,6 @@
       apt:
         update_cache: yes
 
-    - name: Ensure default tmux (no custom config)
-      become: false
-      file:
-        path: "{{ ansible_env.HOME }}/.tmux.conf"
-        state: absent
-    
     - name: Install bare minimum for devcontainer & editing
       become: true
       apt:
@@ -32,18 +28,18 @@
 
     - name: Drop a minimal tmux config
       become: false
-      tags: 
-        - tmux-config
       copy:
+        src: "{{ playbook_dir }}/files/tmux.conf" 
         dest: "{{ user_home }}/.tmux.conf"
         mode: "0644"
-        content: |
-          set -g mouse on
-          setw -g mode-keys vi
-          bind -n C-h select-pane -L
-          bind -n C-j select-pane -D
-          bind -n C-k select-pane -U
-          bind -n C-l select-pane -R
+
+    - name: Reload tmux config
+      become: false
+      shell: |
+        tmux ls > dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
+      args:
+        executable: /bin/bash
+      changed_when: false
 
     - name: Create a workspace folder
       file:
