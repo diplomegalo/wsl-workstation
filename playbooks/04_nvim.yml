@@ -1,0 +1,47 @@
+---
+- name: Install base neovim
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+    
+  vars:
+    user_home: "{{ lookup('env', 'HOME') }}"
+    neovim_config: "{{ user_home }}/.config/nvim/"
+
+  pre_tasks:
+
+    - name: Ensure software-properties-common is installed (needed for add-apt-repository)
+      become: yes
+      apt:
+        name: software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Add neovim repository
+      become: yes
+      apt_repository:
+        repo: ppa:neovim-ppa/stable
+        state: present
+        filename: neovim-ppa
+
+  tasks:
+
+    - name: Update apt cache
+      become: true
+      apt:
+        update_cache: yes
+        name: neovim
+        state: latest
+
+    - name: Ensure neovim config directory exist
+      file:
+        path: "{{ neovim_config }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy init.lua
+      copy:
+        src: "{{ playbook_dir }}/files/init.lua"
+        dest: "{{ neovim_config }}/init.lua"
+        mode: "0644"
+
