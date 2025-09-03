@@ -1,7 +1,6 @@
 - hosts: localhost
   connection: local
   gather_facts: yes
-  become: yes
 
   vars:
     target_user: "{{ ansible_user_id }}"
@@ -12,6 +11,7 @@
   pre_tasks:
     
     - name: Install prerequired tools
+      become: true
       apt:
         update_cache: yes
         pkg:
@@ -21,42 +21,49 @@
         state: present
 
     - name: Restart AppArmor
+      become: true
       service:
         name: apparmor
         state: restarted
+      changed_when: false
       
     - name: Disable docker service
+      become: true
       systemd:
         name: docker.service
         enabled: no
         state: stopped
 
     - name: Disable docker socket
+      become: true
       systemd:
         name: docker.socket
         enabled: no
         state: stopped
 
     - name: Remove current docker socket
+      become: true
       file:
         path: /var/run/docker.sock
         state: absent
 
     - name: Check if dockerd-rootless-setuptool.sh exist
+      become: true
       stat:
         path: "{{ setuptool_path }}"
       register: setuptool
 
     - name: Install docker-ce-rootless-extras if setuptool is missing
+      become: true
       apt:
         name: docker-ce-rootless-extras
         state: present
         update_cache: yes
-        when: not setuptool.stat.exists
+      when: not setuptool.stat.exists
 
   tasks:
 
-    - name: Run dockerd-rootless-setuptool
+    - name: Run dockerd-rootless-setuptool as {{ target_user }}
       become_user: "{{ target_user }}"
       command:
         cmd: "{{ setuptool_path }} install"
@@ -70,7 +77,7 @@
         state: touch
         mode: "0644"
 
-    - name: Enable docker service and start for rootless
+    - name: Enable docker service and start for rootless with {{ target_user }}
       become_user: "{{ target_user}}"
       systemd:
         scope: user
@@ -80,6 +87,7 @@
       when: ansible_service_mgr == "systemd"
 
     - name: Enable docker service in rootfull mode
+      become: true
       systemd:
         name: docker
         enabled: yes
