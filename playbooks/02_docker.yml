@@ -1,0 +1,67 @@
+- hosts: local
+  gather_facts: yes
+  become: yes
+
+  vars:
+    arch_map:
+      x86_64: amd64
+      aarch64: arm64
+
+  pre_tasks:
+
+    - name: Uninstall old versions of docker
+      apt:
+        update_cache: yes
+        pkg: 
+          - docker.io
+          - docker-compose
+          - docker-compose-v2
+          - docker-doc
+          - podman-docker
+        state: absent
+
+    - name: Update APT cache and install prerequired tools
+      apt:
+        update_cache: yes
+        pkg:
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create keyrings repository
+      file:
+        path: /etc/apt/keyrings
+        mode: "0755"
+        state: directory
+
+    - name: Download the public key for docker
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add official docker repository in APT
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        mode: "0644"
+        content: deb [arch={{ arch_map[ansible_architecture] }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+
+    - name: Debug
+      debug:
+        msg: "Current architecture : {{ ansible_architecture }} and distribution release : {{ ansible_distribution_release }}"
+    
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+
+  tasks:
+    - name: Install docker with apt
+      apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present 
+

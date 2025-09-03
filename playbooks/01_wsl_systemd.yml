@@ -1,16 +1,19 @@
 ---
 - hosts: local
-  gather_facts: yes
-  become: yes
+  gather_facts: no
 
   tasks:
     - name: Enable systemd in WSL
-      blockinfile:
+      become: yes
+      ini_file:
         path: /etc/wsl.conf
+        section: boot
+        option: systemd
+        value: "true"
+        no_extra_spaces: true
         create: yes
-        block: |
-          [boot]
-          systemd=true
+        mode: "0644"
+        backup: yes
     - name: Message to restart WSL
       debug:
         msg: "Redémarre WSL: wsl --shutdown (dans PowerShell) puis relance Ubuntu."
