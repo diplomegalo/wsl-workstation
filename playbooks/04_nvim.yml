@@ -6,42 +6,62 @@
     
   vars:
     user_home: "{{ lookup('env', 'HOME') }}"
-    neovim_config: "{{ user_home }}/.config/nvim/"
-
+    nvim_config: "{{ user_home }}/.config/nvim/"
+    nvim_path: /opt/nvim
+    nvim_bin: /usr/local/bin/nvim
+    arch_map:
+      x86_64: x86_64
+      aarch64: arm64
+    nvim_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-{{ arch_map[ansible_architecture] }}.tar.gz"
+    
   pre_tasks:
 
-    - name: Ensure software-properties-common is installed (needed for add-apt-repository)
-      become: yes
-      apt:
-        name: software-properties-common
-        state: present
-        update_cache: yes
+    - name: Remove old neovim installation
+      become: true
+      file:
+        path: "{{ nvim_path }}"
+        state: absent
 
-    - name: Add neovim repository
-      become: yes
-      apt_repository:
-        repo: ppa:neovim-ppa/stable
-        state: present
-        filename: neovim-ppa
+    - name: Ensure {{ nvim_config }} exist
+      file:
+        path: "{{ nvim_config }}"
+        state: directory
+        mode: "0755"
+          
+    - name: Ensure {{ nvim_path }} exist
+      become: true
+      file:
+        path: "{{ nvim_path }}"
+        state: directory
+        mode: "0755"
 
   tasks:
 
-    - name: Update apt cache
-      become: true
-      apt:
-        update_cache: yes
-        name: neovim
-        state: latest
+    - name: Download neovim archive for architecture {{ arch_map[ansible_architecture] }}
+      get_url:
+        url: "{{ nvim_url }}"
+        dest: /tmp/nvim.tar.gz
+        mode: "0644"
+        force: true
 
-    - name: Ensure neovim config directory exist
+    - name: Extract neovim to {{ nvim_path }}
+      become: true
+      unarchive:
+        src: /tmp/nvim.tar.gz
+        dest: "{{ nvim_path }}"
+        remote_src: true
+    
+    - name: Ensure symlink for nvim in {{ nvim_bin }}
+      become: true
       file:
-        path: "{{ neovim_config }}"
-        state: directory
-        mode: "0755"
+        src: "{{ nvim_path }}/bin/nvim"
+        dest: "{{ nvim_bin }}"
+        state: link
+        force: true
 
     - name: Copy init.lua
       copy:
         src: "{{ playbook_dir }}/files/init.lua"
-        dest: "{{ neovim_config }}/init.lua"
+        dest: "{{ nvim_config }}/init.lua"
         mode: "0644"
 
