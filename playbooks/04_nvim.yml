@@ -49,8 +49,9 @@
       unarchive:
         src: /tmp/nvim.tar.gz
         dest: "{{ nvim_path }}"
+        extra_opts: [--strip-components=1]
         remote_src: true
-    
+
     - name: Ensure symlink for nvim in {{ nvim_bin }}
       become: true
       file:
