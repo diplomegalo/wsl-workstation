@@ -1,11 +1,12 @@
 ---
-- hosts: local
+- name: Install base tools
+  hosts: local
   connection: local
   gather_facts: yes
 
   vars:
-    user_home: "{{ lookup('env', 'HOME') }}" 
-      
+    user_home: "{{ lookup('env', 'HOME') }}"
+
   tasks:
     - name: Update APT cache
       become: true
@@ -16,7 +17,7 @@
       become: true
       apt:
         state: present
-        pkg:
+        name:
           - git
           - openssh-client
           - curl
@@ -24,25 +25,53 @@
           - unzip
           - nano
           - tmux
-    
+
+    - name: Create TPM (tmux plugin manager) directory
+      file:
+        path: "{{ user_home }}/.tmux/plugins"
+        state: directory
+        mode: "0755"
+
+    - name: Clone TPM tmux plugins from github (correct path + user)
+      git:
+        repo: "https://github.com/tmux-plugins/tpm.git"
+        dest: "{{ user_home }}/.tmux/plugins/tpm"
+        version: master
+        update: yes
 
     - name: Drop a minimal tmux config
-      become: false
       copy:
-        src: "{{ playbook_dir }}/files/tmux.conf" 
+        src: "{{ playbook_dir }}/files/tmux.conf"
         dest: "{{ user_home }}/.tmux.conf"
         mode: "0644"
 
-    - name: Reload tmux config
-      become: false
+    - name: Reload tmux config if a server is running
       shell: |
-        tmux ls > dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
+        tmux ls > /dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Install tmux plugins via TPM (équivalent Ctrl-b I)
+      become: false
+      shell: "{{ user_home }}/.tmux/plugins/tpm/bin/install_plugins"
+      args:
+        chdir: "{{ user_home }}"
+        creates: "{{ user_home }}/.tmux/plugins/tmux-sensible"  # évite réinstall si déjà fait
+      environment:
+        HOME: "{{ user_home }}"     # s'assure que le script lit le bon ~/.tmux.conf
+        XDG_CONFIG_HOME: ""         # évite de pointer vers ~/.config/tmux/ si présent
+
+    - name: Reload tmux config if a server is running
+      shell: |
+        tmux ls > /dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
       args:
         executable: /bin/bash
       changed_when: false
 
     - name: Create a workspace folder
       file:
-        path: "{{user_home}}/source"
+        path: "{{ user_home }}/source"
         state: directory
-        mode: '0755'
+        mode: "0755"
+
