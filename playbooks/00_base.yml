@@ -60,6 +60,7 @@
         creates: "{{ user_home }}/.tmux/plugins/tmux-sensible"  # évite réinstall si déjà fait
       environment:
         HOME: "{{ user_home }}"     # s'assure que le script lit le bon ~/.tmux.conf
+        TMUX_PLUGIN_MANAGER_PATH: "{{ user_home }}/.tmux/plugins"
         XDG_CONFIG_HOME: ""         # évite de pointer vers ~/.config/tmux/ si présent
 
     - name: Reload tmux config if a server is running
