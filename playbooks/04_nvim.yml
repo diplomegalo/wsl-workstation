@@ -19,15 +19,20 @@
     - name: Remove old neovim installation
       become: true
       file:
-        path: "{{ nvim_path }}"
+        path: "{{ item }}"
         state: absent
+      loop:
+        - "{{ nvim_path }}"
+        - "{{ user_home }}/.local/share/nvim"
+        - "{{ user_home }}/.local/state/nvim"
+        - "{{ nvim_config }}" 
 
     - name: Ensure {{ nvim_config }} exist
       file:
         path: "{{ nvim_config }}"
         state: directory
         mode: "0755"
-          
+
     - name: Ensure {{ nvim_path }} exist
       become: true
       file:
@@ -59,10 +64,17 @@
         dest: "{{ nvim_bin }}"
         state: link
         force: true
+    
+    - name: Download starter config from git
+      git:
+        repo: "https://github.com/LazyVim/starter"
+        dest: "{{ nvim_config }}"
+        version: HEAD
+        force: yes
 
-    - name: Copy init.lua
-      copy:
-        src: "{{ playbook_dir }}/files/init.lua"
-        dest: "{{ nvim_config }}/init.lua"
-        mode: "0644"
+    - name: Remove .git files 
+      become: true
+      file:
+        path: "{{ nvim_config }}/.git"
+        state: absent
 
