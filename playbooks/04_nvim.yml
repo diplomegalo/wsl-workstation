@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   gather_facts: yes
-    
+
   vars:
     user_home: "{{ lookup('env', 'HOME') }}"
     nvim_config: "{{ user_home }}/.config/nvim/"
@@ -13,7 +13,7 @@
       x86_64: x86_64
       aarch64: arm64
     nvim_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-{{ arch_map[ansible_architecture] }}.tar.gz"
-    
+
   pre_tasks:
 
     - name: Remove old neovim installation
@@ -40,6 +40,14 @@
         state: directory
         mode: "0755"
 
+    - name: Install prerquired LazyGit
+      become: true
+      apt:
+        update_cache: yes
+        pkg:
+          - build-essential
+          - lazygit
+        state: present
   tasks:
 
     - name: Download neovim archive for architecture {{ arch_map[ansible_architecture] }}
@@ -64,7 +72,7 @@
         dest: "{{ nvim_bin }}"
         state: link
         force: true
-    
+
     - name: Download starter config from git
       git:
         repo: "https://github.com/LazyVim/starter"
