@@ -13,6 +13,7 @@
       x86_64: x86_64
       aarch64: arm64
     nvim_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-{{ arch_map[ansible_architecture] }}.tar.gz"
+    lazygit_url: "https://github.com/jesseduffield/lazygit/releases/download/v0.44.1/lazygit_0.44.1_Linux_{{ arch_map[ansible_architecture] }}.tar.gz"
 
   pre_tasks:
 
@@ -23,9 +24,9 @@
         state: absent
       loop:
         - "{{ nvim_path }}"
+        - "{{ nvim_config }}" 
         - "{{ user_home }}/.local/share/nvim"
         - "{{ user_home }}/.local/state/nvim"
-        - "{{ nvim_config }}" 
 
     - name: Ensure {{ nvim_config }} exist
       file:
@@ -40,14 +41,32 @@
         state: directory
         mode: "0755"
 
-    - name: Install prerquired LazyGit
+    - name: Download lazygit archive
+      get_url:
+        url: "{{ lazygit_url }}"
+        dest: /tmp/lazygit.tar.gz
+
+    - name: Extract lazygit
       become: true
+      unarchive:
+        src: /tmp/lazygit.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+
+    - name: Ensure lazygit is executable
+      file:
+        path: /usr/local/bin/lazygit
+        mode: '0755'
+
+    - name: Install prerequired package with apt
+      become: yes
       apt:
         update_cache: yes
         pkg:
+          - fzf
+          - ripgrep
+          - fd-find
           - build-essential
-          - lazygit
-        state: present
   tasks:
 
     - name: Download neovim archive for architecture {{ arch_map[ansible_architecture] }}
