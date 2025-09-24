@@ -1,12 +1,4 @@
 ---
-- name: Install base tools
-  hosts: local
-  connection: local
-  gather_facts: yes
-
-  vars:
-    user_home: "{{ lookup('env', 'HOME') }}"
-
   tasks:
     - name: Update APT cache
       become: true

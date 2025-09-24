@@ -1,0 +1,9 @@
+---
+- name: Install and configure a WSL workstation 
+  hosts: local
+  connection: local
+  gather_facts: yes
+
+  vars:
+    user_home: "{{ lookup('env', 'HOME') }}"
+
