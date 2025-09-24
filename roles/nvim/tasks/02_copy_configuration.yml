@@ -1,7 +1,11 @@
-- name: Copy the configuration file
+- name: Copy the copilot chat configuration
   copy:
    src: "{{ playbook_dir }}/roles/nvim/template/copilot.lua"
    dest: "{{ user_home }}/.config/nvim/lua/plugins/copilot.lua"
    mode: "0644"
 
-
+- name: Copy the telescope configuration
+  copy:
+   src: "{{ playbook_dir }}/roles/nvim/template/telescope.lua"
+   dest: "{{ user_home }}/.config/nvim/lua/plugins/telescope.lua"
+   mode: "0644"
