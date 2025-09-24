@@ -7,3 +7,8 @@
   vars:
     user_home: "{{ lookup('env', 'HOME') }}"
 
+  roles:
+    - base
+    - role: docker
+      become: true
+

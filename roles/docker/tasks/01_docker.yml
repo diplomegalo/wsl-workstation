@@ -1,14 +1,3 @@
-- hosts: local
-  gather_facts: yes
-  become: yes
-
-  vars:
-    arch_map:
-      x86_64: amd64
-      aarch64: arm64
-
-  pre_tasks:
-
     - name: Uninstall old versions of docker
       apt:
         update_cache: yes
@@ -54,7 +43,6 @@
       apt:
         update_cache: yes
 
-  tasks:
     - name: Install docker with apt
       apt:
         pkg:

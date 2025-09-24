@@ -1,0 +1,5 @@
+- name: Install docker 
+  import_tasks: 01_docker.yml
+
+- name: Configure docker for rootless 
+  import_tasks:  02_docker_rootless.yml

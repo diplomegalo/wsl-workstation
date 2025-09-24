@@ -1,15 +1,3 @@
-- hosts: localhost
-  connection: local
-  gather_facts: yes
-
-  vars:
-    target_user: "{{ ansible_user_id }}"
-    target_home: "{{ lookup('env','HOME') }}"
-    setuptool_path: /usr/bin/dockerd-rootless-setuptool.sh
-    user_systemd_unit: "{{ target_home }}/.config/systemd/user/docker.service"
-
-  pre_tasks:
-    
     - name: Install prerequired tools
       become: true
       apt:
@@ -60,8 +48,6 @@
         state: present
         update_cache: yes
       when: not setuptool.stat.exists
-
-  tasks:
 
     - name: Run dockerd-rootless-setuptool as {{ target_user }}
       become_user: "{{ target_user }}"

@@ -1,0 +1,10 @@
+
+    nvim_config: "{{ user_home }}/.config/nvim/"
+    nvim_path: /opt/nvim
+    nvim_bin: /usr/local/bin/nvim
+    arch_map:
+      x86_64: x86_64
+      aarch64: arm64
+    nvim_url: "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-{{ arch_map[ansible_architecture] }}.tar.gz"
+    lazygit_url: "https://github.com/jesseduffield/lazygit/releases/download/v0.44.1/lazygit_0.44.1_Linux_{{ arch_map[ansible_architecture] }}.tar.gz"
+

@@ -1,8 +1,4 @@
 ---
-- hosts: local
-  gather_facts: no
-
-  tasks:
     - name: Enable systemd in WSL
       become: yes
       ini_file:

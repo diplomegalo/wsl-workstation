@@ -1,0 +1,69 @@
+---
+    - name: Update APT cache
+      become: true
+      apt:
+        update_cache: yes
+
+    - name: Install bare minimum for devcontainer & editing
+      become: true
+      apt:
+        state: present
+        name:
+          - git
+          - openssh-client
+          - curl
+          - ca-certificates
+          - unzip
+          - nano
+          - tmux
+
+    - name: Create TPM (tmux plugin manager) directory
+      file:
+        path: "{{ user_home }}/.tmux/plugins"
+        state: directory
+        mode: "0755"
+
+    - name: Clone TPM tmux plugins from github (correct path + user)
+      git:
+        repo: "https://github.com/tmux-plugins/tpm.git"
+        dest: "{{ user_home }}/.tmux/plugins/tpm"
+        version: master
+        update: yes
+
+    - name: Drop a minimal tmux config
+      copy:
+        src: "{{ playbook_dir }}/roles/base/template/tmux.conf"
+        dest: "{{ user_home }}/.tmux.conf"
+        mode: "0644"
+
+    - name: Reload tmux config if a server is running
+      shell: |
+        tmux ls > /dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Install tmux plugins via TPM (équivalent Ctrl-b I)
+      become: false
+      shell: "{{ user_home }}/.tmux/plugins/tpm/bin/install_plugins"
+      args:
+        chdir: "{{ user_home }}"
+        creates: "{{ user_home }}/.tmux/plugins/tmux-sensible"  # évite réinstall si déjà fait
+      environment:
+        HOME: "{{ user_home }}"     # s'assure que le script lit le bon ~/.tmux.conf
+        TMUX_PLUGIN_MANAGER_PATH: "{{ user_home }}/.tmux/plugins"
+        XDG_CONFIG_HOME: ""         # évite de pointer vers ~/.config/tmux/ si présent
+
+    - name: Reload tmux config if a server is running
+      shell: |
+        tmux ls > /dev/null 2>&1 && tmux source-file "{{ user_home }}/.tmux.conf" || true
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Create a workspace folder
+      file:
+        path: "{{ user_home }}/source"
+        state: directory
+        mode: "0755"
+
