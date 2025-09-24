@@ -14,7 +14,7 @@
         name: apparmor
         state: restarted
       changed_when: false
-      
+
     - name: Disable docker service
       become: true
       systemd:
