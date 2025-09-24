@@ -1,0 +1,7 @@
+- name: Copy the configuration file
+  copy:
+   src: "{{ playbook_dir }}/roles/nvim/template/copilot.lua"
+   dest: "{{ user_home }}/.config/nvim/lua/plugins/copilot.lua"
+   mode: "0644"
+
+

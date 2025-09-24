@@ -1,0 +1,102 @@
+---
+    - name: Remove old neovim installation
+      become: true
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ nvim_path }}"
+        - "{{ nvim_config }}" 
+        - "{{ user_home }}/.local/share/nvim"
+        - "{{ user_home }}/.local/state/nvim"
+
+    - name: Ensure {{ nvim_config }} exist
+      file:
+        path: "{{ nvim_config }}"
+        state: directory
+        mode: "0755"
+
+    - name: Ensure {{ nvim_path }} exist
+      become: true
+      file:
+        path: "{{ nvim_path }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download lazygit archive
+      get_url:
+        url: "{{ lazygit_url }}"
+        dest: /tmp/lazygit.tar.gz
+
+    - name: Extract lazygit
+      become: true
+      unarchive:
+        src: /tmp/lazygit.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+
+    - name: Ensure lazygit is executable
+      file:
+        path: /usr/local/bin/lazygit
+        mode: '0755'
+
+    - name: Install prerequired package with apt
+      become: yes
+      apt:
+        update_cache: yes
+        pkg:
+          - fzf
+          - ripgrep
+          - fd-find
+          - build-essential
+
+    - name: Install nvm
+      tags: nvm_install
+      shell: "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+      args:
+        creates: "{{ user_home }}/.nvm/nvm.sh"
+    
+    - name: Install node and npm
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        . "$NVM_DIR/nvm.sh"
+        nvm install --lts
+      args:
+        executable: /bin/bash
+
+    - name: Download neovim archive for architecture {{ arch_map[ansible_architecture] }}
+      get_url:
+        url: "{{ nvim_url }}"
+        dest: /tmp/nvim.tar.gz
+        mode: "0644"
+        force: true
+
+    - name: Extract neovim to {{ nvim_path }}
+      become: true
+      unarchive:
+        src: /tmp/nvim.tar.gz
+        dest: "{{ nvim_path }}"
+        extra_opts: [--strip-components=1]
+        remote_src: true
+
+    - name: Ensure symlink for nvim in {{ nvim_bin }}
+      become: true
+      file:
+        src: "{{ nvim_path }}/bin/nvim"
+        dest: "{{ nvim_bin }}"
+        state: link
+        force: true
+
+    - name: Download starter config from git
+      git:
+        repo: "https://github.com/LazyVim/starter"
+        dest: "{{ nvim_config }}"
+        version: HEAD
+        force: yes
+
+    - name: Remove .git files 
+      become: true
+      file:
+        path: "{{ nvim_config }}/.git"
+        state: absent
+

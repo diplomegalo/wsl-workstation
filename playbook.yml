@@ -11,4 +11,4 @@
     - base
     - role: docker
       become: true
-
+    - nvim
