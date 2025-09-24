@@ -2,4 +2,4 @@
   import_tasks: 01_lazy_vim.yml
 
 - name: Configure the Copilot Chat plugin
-  import_tasks: 02_copilot_chat.yml
+  import_tasks: 02_copy_configuration.yml
