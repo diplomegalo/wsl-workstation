@@ -8,7 +8,6 @@
     user_home: "{{ lookup('env', 'HOME') }}"
 
   roles:
-    - common
     - role: docker
       become: true
     - nvim
