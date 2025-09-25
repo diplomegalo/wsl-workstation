@@ -32,7 +32,7 @@
 
     - name: Drop a minimal tmux config
       copy:
-        src: "{{ playbook_dir }}/roles/base/template/tmux.conf"
+        src: "{{ playbook_dir }}/roles/common/template/tmux.conf"
         dest: "{{ user_home }}/.tmux.conf"
         mode: "0644"
 
